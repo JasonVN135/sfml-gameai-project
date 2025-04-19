@@ -15,7 +15,7 @@ SRCS = main.cpp \
 	    Game.cpp \
 		Entity.cpp \
 		SteeringBehavior.cpp \
-		Graph.cpp \
+		DecisionTreeNode.cpp \
 		Breadcrumb.cpp \
 		VectorUtils.cpp
 

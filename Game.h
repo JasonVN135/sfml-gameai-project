@@ -22,7 +22,7 @@ private:
     /** Vector of entities */
     std::vector<Entity*> entities;
     /** Vector of breadcrumbs */
-    std::vector<Breadcrumb*> waterBreadcrumbs;
+    std::vector<Breadcrumb*> waters;
     /** Number of entities that have spawned */
     int entityCount;
     /** The set arrive distance for all navNodes */
@@ -63,7 +63,6 @@ private:
 
 
 public:
-    const float DROP_TIME = 4.0;
 
     enum STEERING_TYPE {
         POS_AND_ORI,
@@ -75,17 +74,9 @@ public:
         FLOCKING
     };
 
-    enum SEARCH_TYPE {
-        DIJKSTRA,
-        ASTAR
-    };
-
 
     /** The Current Steering Behavior Type */
     STEERING_TYPE currentSteeringType;
-    /** The search algorithm to use */
-    SEARCH_TYPE searchType;
-
 
     /**
      * Singleton instance
@@ -94,7 +85,6 @@ public:
 
     Game(const Game&) = delete;
     Game& operator=(const Game&) = delete;
-
 
     /**
      * Method to run the main game loop
@@ -105,7 +95,6 @@ public:
      * Get the list of all entities
      */
     std::vector<Entity*> getEntities();
-
 
     /**
      * Method to spawn an AI Object. Attach 4 Markers for the AI to path towards.
@@ -127,8 +116,11 @@ public:
     /**
      * Set the velocity match for entities if using velocity match
      */
-    void sendVelocityMatch(float deltaTime);
+    //void sendVelocityMatch(float deltaTime);
 
+    /**
+     * Get the closest water Breadcrumb Node
+     */
     Breadcrumb* getNearestWaterBreadcrumb(sf::Vector2f currentPos);
 
 };

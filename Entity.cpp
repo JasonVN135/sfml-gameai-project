@@ -6,6 +6,7 @@ Entity::Entity(const int id, const std::string& textureFile, const sf::Vector2f&
     if (!texture.loadFromFile(textureFile)) {
         throw std::runtime_error("Failed to load text: " + textureFile);
     }
+    
     sprite.setTexture(texture);
     sprite.setOrigin(5, 3.5);
 
@@ -23,17 +24,9 @@ Entity::Entity(const int id, const std::string& textureFile, const sf::Vector2f&
 
     sprite.setPosition(kinematic.position);
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distrib(50, 750);
-
-    sf::Vector2f bcSpawn(distrib(gen), distrib(gen));
-    Breadcrumb* breadcrumb = new Breadcrumb(bcSpawn, 30);
-    setBreadcrumb(breadcrumb);
-
-    thirst = 100.0;
-    drinking = false;
-
+    thirst = 60.0;
+    
+    
     auto wanderAction = std::make_shared<Action>("wander");
     auto pathToCenterAction = std::make_shared<Action>("pathToCenter");
     auto pathToWaterAction = std::make_shared<Action>("pathToWater");
@@ -45,28 +38,56 @@ Entity::Entity(const int id, const std::string& textureFile, const sf::Vector2f&
             return this->isNearWall();
         });
 
+    auto isPathing = std::make_shared<BoolDecision>(
+        pathToCenterAction, isCloseToWall, [this]() {
+        return this->hasBreadcrumb();
+    });
+
     auto targetReached = std::make_shared<BoolDecision>(
         drinkAction, pathToWaterAction, [this]() {
             return this->isTargetReached();
         });
 
     auto isThirsty = std::make_shared<FloatDecision>(
-        targetReached, isCloseToWall, [this]() {
+        targetReached, isPathing, [this]() {
             return this->getThirst();
         }, 0.0f, 40.0f);
 
     decisionTree = isThirsty;
+    
 
-    currentAction = "wander";
+    currentAction = "";
 
 
 }
 
+Entity::~Entity() {
+    delete breadcrumb;
+}
+
 void Entity::update(float deltaTime) {
 
-    targetKinematic.position = kinematic.position;
+    auto decision = decisionTree->makeDecision();
+    auto action = std::dynamic_pointer_cast<Action>(decision);
 
-    targetKinematic.position = breadcrumb->getPosition();
+    if (action) {
+        std::string actionName = action->getName();
+        if (actionName == "wander" && currentAction != "wander") wander();
+        else if (actionName == "pathToCenter" && currentAction != "pathToCenter") pathToCenter();
+        else if (actionName == "pathToWater" && currentAction != "pathToWater") pathToWater();
+        else if (actionName == "drink") drink();
+
+        currentAction = actionName;
+    }
+
+    
+
+    targetKinematic = kinematic;
+
+    if (breadcrumb != nullptr) {
+        targetKinematic.position = breadcrumb->getPosition();
+        //printf("%f\n", breadcrumbs.at(0).getKinematic().position.y);
+    }
     
     SteeringOutput total;
     
@@ -75,7 +96,6 @@ void Entity::update(float deltaTime) {
         total.linear += output.linear;
         total.angular += output.angular;
     }
-
 
     kinematic.position += kinematic.velocity * deltaTime;
     kinematic.orientation += kinematic.rotation * deltaTime;;
@@ -98,21 +118,12 @@ void Entity::update(float deltaTime) {
     setKinematic(kinematic);
 
     thirst -= deltaTime;
-
-    auto decision = decisionTree->makeDecision();
-    auto action = std::dynamic_pointer_cast<Action>(decision);
-
-    if (action) {
-        std::string actionName = action->getName();
-        if (actionName == "wander" && currentAction != "wander") wander();
-        else if (actionName == "pathToCenter" && currentAction != "pathToCenter") pathToCenter();
-        else if (actionName == "pathToWater" && currentAction != "pathToWater") pathToWater();
-        else if (actionName == "drink") drink();
-    }
-    
 }
 
 void Entity::render(sf::RenderWindow& window) {
+    if (breadcrumb != nullptr) {
+        breadcrumb->render(window);
+    }
     window.draw(sprite);
 } 
 
@@ -171,16 +182,19 @@ void Entity::setBreadcrumb(Breadcrumb *newBreadcrumb) {
     breadcrumb = newBreadcrumb;
 }
 
-float Entity::getThirst() {
-    return thirst;
+void Entity::removeBreadcrumb() {
+    if (breadcrumb != nullptr) {
+        //delete breadcrumb;  
+        breadcrumb = nullptr; 
+    }
 }
 
-Breadcrumb* Entity::removeBreadcrumb() {
-    Breadcrumb* temp = breadcrumb;
-    breadcrumb = nullptr;
-    return temp;
+bool Entity::hasBreadcrumb() {
+    if (breadcrumb != nullptr) {
+        return !isTargetReached();
+    }
+    return false;
 }
-
 
 bool Entity::isTargetReached() {
     if (breadcrumb != nullptr) {
@@ -189,15 +203,18 @@ bool Entity::isTargetReached() {
     return false;
 }
 
+float Entity::getThirst() {
+    return thirst;
+}
 
 bool Entity::isNearWall() {
-    sf::Vector2f entityPos = kinematic.position;
+    sf::Vector2f pos = kinematic.position;
 
-    if (getBreadcrumb != nullptr) {
+    if (breadcrumb != nullptr) {
         return false;
     }
 
-    if (entityPos.x < 100 || entityPos.x > 900 || entityPos.y < 80 || entityPos.y > 720) {
+    if (pos.x < 100 || pos.x > 900 || pos.y < 80 || pos.y > 720) {
         return true;
     }
     return false;
@@ -213,14 +230,15 @@ void Entity::pathToCenter() {
     clearSteeringBehaviors();
     removeBreadcrumb();
     setBreadcrumb(new Breadcrumb(sf::Vector2f(500, 400), 10));
-    addSteeringBehavior(std::make_unique<Wander>(50, 15, 0.01, 0, 4, M_PI / 16, 0.1, M_PI / 32, M_PI / 4));
+    addSteeringBehavior(std::make_unique<Arrive>(15, 0.1, 10, 40));
+    addSteeringBehavior(std::make_unique<Align>(M_PI / 6, 0.1, M_PI / 32, M_PI / 8));
 }
 
 void Entity::pathToWater() {
     clearSteeringBehaviors();
     removeBreadcrumb();
     Breadcrumb* water = Game::getInstance().getNearestWaterBreadcrumb(kinematic.position);
-    setBreadcrumb(water);
+    setBreadcrumb(new Breadcrumb(water->getPosition(), 10));
     addSteeringBehavior(std::make_unique<Arrive>(15, 0.1, 10, 30));
     addSteeringBehavior(std::make_unique<Align>(M_PI / 6, 0.1, M_PI / 32, M_PI / 8));
 }

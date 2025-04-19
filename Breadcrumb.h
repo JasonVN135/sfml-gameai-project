@@ -7,7 +7,7 @@
 #include "Kinematic.h"
 #include "VectorUtils.h"
 
-class Breadcrumb : sf::CircleShape {
+class Breadcrumb : public sf::CircleShape {
 
 private:
     /** The Navigation Node's Kinematic */

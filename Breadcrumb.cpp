@@ -4,7 +4,7 @@ Breadcrumb::Breadcrumb(const sf::Vector2f &position, const float arriveDist) {
     this->setOrigin(arriveDist, arriveDist);
     kinematic.position = position;
     this->setRadius(5);
-    this->setFillColor(sf::Color(68, 85, 200, 100));
+    this->setFillColor(sf::Color(68, 200, 86, 100));
     this->setPosition(position.x + 5, position.y + 5);
 }
 

@@ -3,12 +3,13 @@
 
 #include <SFML/Graphics.hpp>
 #include <cmath>
-#include <random>
+#include <string>
+#include "Breadcrumb.h"
+#include "DecisionTreeNode.h"
 #include "Kinematic.h"
 #include "VectorUtils.h"
 #include "SteeringOutput.h"
-#include "Breadcrumb.h"
-#include "DecisionTreeNode.h"
+#include <iostream>
 
 class SteeringBehavior;
 
@@ -27,11 +28,12 @@ private:
     Breadcrumb* breadcrumb;
     /** The kinematic struct that entity will aim for */
     Kinematic targetKinematic;
-
-    bool drinking;
+    /** The thirst value of the Entity */
     float thirst;
-
+    /** The decission tree for the entity */
     std::shared_ptr<DecisionTreeNode> decisionTree;
+    /** The current action name */
+    std::string currentAction;
 
     // Actions
     void wander();
@@ -39,7 +41,6 @@ private:
     void pathToWater();
     void drink();
 
-    std::string currentAction;
     
 public:
 
@@ -55,8 +56,7 @@ public:
     /**
      * The entity deconstructor
      */
-    ~Entity() = default;
-    
+    ~Entity();
     
 
     /**
@@ -74,13 +74,6 @@ public:
      */
     void render(sf::RenderWindow& window);
 
-    
-    /**
-     * Get the kinematic of the entity
-     * 
-     * @return the kinematic struct
-     */
-    Kinematic getKinematic();
 
     /**
      * Set the position of the entity
@@ -89,12 +82,14 @@ public:
      */
     void setPosition(const sf::Vector2f& newPosition);
 
+
     /**
      * Set the velocity of the Entity
      * 
      * @param newVelocity The velocity to set
      */
     void setVelocity(const sf::Vector2f &newVelocity);
+
 
     /**
      * Set the rotation of the Entity
@@ -103,12 +98,21 @@ public:
      */
     void setOrientation(const float newOrientation);
 
+
     /**
      * Set the rotation speed of the Entity
      * 
      * @param newRotation The rotation speed to set
      */
     void setRotation(const float newRotation);
+
+
+    /**
+     * Get the kinematic of the entity
+     * 
+     * @return the kinematic struct
+     */
+    Kinematic getKinematic();
 
     /**
      * Completely set the kinematic struct of the entity
@@ -130,33 +134,36 @@ public:
      */
     void clearSteeringBehaviors();
 
-
     /**
-     * Get the breadcrumb the entity is trying to reach
-     * 
-     * @return the breadcrumb the entity is moving to
+     * Get the breadcrumb the Entity is going to 
      */
     Breadcrumb* getBreadcrumb();
 
     /**
-     * Set the breadcrumb the ai will follow
+     * Add a breadcrumb to ai will follow
      */
     void setBreadcrumb(Breadcrumb *breadcrumb);
-
-    float getThirst();
 
     /**
      * Remove a specific breadcrumb
      */
-    Breadcrumb* removeBreadcrumb();
+    void removeBreadcrumb();
+
+    bool hasBreadcrumb();
 
     /**
      * Check if sprite reached the breadcrumb
      */
     bool isTargetReached();
 
-    bool isThirsty();
+    /**
+     * Return the thirst value of the entity
+     */
+    float getThirst();
 
+    /**
+     * Is near wall
+     */
     bool isNearWall();
     
 };

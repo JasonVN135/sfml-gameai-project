@@ -1,10 +1,10 @@
 #ifndef DECISION_TREE_NODE
-#define DECISION_TREE_NDOE
+#define DECISION_TREE_NODE
 
-#include <iostream>
-#include <string>
-#include <memory>
 #include <functional>
+#include <iostream>
+#include <memory>
+#include <string>
 
 // The Abstract Decision Tree node, these nodes are either Actions or Decisions 
 class DecisionTreeNode {

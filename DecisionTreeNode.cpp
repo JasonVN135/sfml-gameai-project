@@ -10,6 +10,10 @@ std::shared_ptr<DecisionTreeNode> Action::makeDecision() {
     return shared_from_this();
 }
 
+std::string Action::getName() const {
+    return actionName;
+}
+
 // === Decision Implementation ===
 Decision::Decision(std::shared_ptr<DecisionTreeNode> tNode, std::shared_ptr<DecisionTreeNode> fNode)
     : trueNode(tNode), falseNode(fNode) {}

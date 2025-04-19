@@ -1,31 +1,28 @@
 #include "Game.h"
 
 
-Game::Game() : window(sf::VideoMode(1000, 1000), "SFML Window") {
+Game::Game() : window(sf::VideoMode(1000, 800), "SFML Window") {
 
 
     arriveDistance = 10.0;
-    slowDistance = 30.0;
-
-    //tileSize = 30;
-
-    //graph = new Graph("DataFiles/vertices.csv", "DataFiles/edges.csv", false);
-
-    searchType = DIJKSTRA;
-
-
+    slowDistance = 50.0;
 
     // Initialize the steering behavior
-    spawnEntity(50, 50);
+    spawnEntity(300, 300);
     currentSteeringType = ARRIVE_AND_ALIGN;
-    setSteeringBehavior(currentSteeringType);
 
-    
+    waters.push_back(new Breadcrumb(sf::Vector2f(180, 180), 10));
+    waters.push_back(new Breadcrumb(sf::Vector2f(840, 450), 10));
+    waters.push_back(new Breadcrumb(sf::Vector2f(270, 690), 10));
+
+    for (auto water : waters) {
+        water->setFillColor(sf::Color(68, 86, 240, 100));
+    }
 }
 
 
 Game::~Game() {
-    for (auto breadcrumb : waterBreadcrumbs) {
+    for (auto breadcrumb : waters) {
         delete breadcrumb;
     }
     for (auto entity : entities) {
@@ -48,7 +45,7 @@ void Game::processEvents() {
 
         if (event.type == sf::Event::MouseButtonPressed) {
             if (event.mouseButton.button == sf::Mouse::Left) {
-                sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+            
             }
         }
         
@@ -57,36 +54,7 @@ void Game::processEvents() {
             if (event.key.code == sf::Keyboard::Num0) {
                 
             }
-            else if (event.key.code == sf::Keyboard::Num1) {
-                
-            }
-            else if (event.key.code == sf::Keyboard::Num2) {
-               
-            }
-            else if (event.key.code == sf::Keyboard::Num3) {
-
-            }
-            else if (event.key.code == sf::Keyboard::Num4) {
- 
-            }
-            else if (event.key.code == sf::Keyboard::Num5) {
-
-            }
-            else if (event.key.code == sf::Keyboard::Num6) {
-               
-            }
-            else if (event.key.code == sf::Keyboard::Num7) {
-                
-            }
-          
         }
-
-        /*
-        else if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-            printf("%d %d\n", sf::Mouse::getPosition().x, sf::Mouse::getPosition().y);
-            sf::Vector2i mousePosition = sf::Mouse::getPosition();
-            addNavNode(mousePosition);
-        }*/
     }
 }
 
@@ -94,7 +62,7 @@ void Game::processEvents() {
 void Game::update(float deltaTime) {
 
     if (currentSteeringType == VELOCITY) {
-        sendVelocityMatch(deltaTime);
+        //sendVelocityMatch(deltaTime);
     }
 
     if (entities.size() == 0) {
@@ -114,7 +82,7 @@ void Game::render() {
     window.clear(sf::Color::White);
 
     // draw everything here
-    for (auto breadcrumb : waterBreadcrumbs) {
+    for (auto breadcrumb : waters) {
         breadcrumb->render(window);
     }
 
@@ -159,13 +127,13 @@ void Game::checkOutOfBounds() {
         if (entity->getKinematic().position.x < -5) {
             entity->setPosition(sf::Vector2f(800, entityPos.y));
         }
-        else if (entity->getKinematic().position.x > 805) {
+        else if (entity->getKinematic().position.x > 1005) {
             entity->setPosition(sf::Vector2f(0, entityPos.y));
         }
         if (entity->getKinematic().position.y < -5) {
-            entity->setPosition(sf::Vector2f(entityPos.x, 600));
+            entity->setPosition(sf::Vector2f(entityPos.x, 800));
         }
-        else if (entity->getKinematic().position.y > 605) {
+        else if (entity->getKinematic().position.y > 805) {
             entity->setPosition(sf::Vector2f(entityPos.x, 0));
         }
     }
@@ -177,7 +145,6 @@ void Game::setSteeringBehavior(STEERING_TYPE steeringChoice) {
 
     if (steeringChoice == POS_AND_ORI) {
         for (auto entity : entities) {
-            entity->removeBreadcrumb();
             entity->clearSteeringBehaviors();
             entity->addSteeringBehavior(std::make_unique<PositionMatching>(20, 0.1));
             entity->addSteeringBehavior(std::make_unique<OrientationMatching>(M_PI * .1, 0.1));
@@ -192,14 +159,12 @@ void Game::setSteeringBehavior(STEERING_TYPE steeringChoice) {
         velocityStruct.prevLoc = mousePosFloat;
         velocityStruct.nextLoc = mousePosFloat;
         for (auto entity : entities) {
-            entity->removeBreadcrumb();
             entity->addSteeringBehavior(std::make_unique<VelocityMatching>(50.0, 0.1));
             entity->addSteeringBehavior(std::make_unique<RotationMatching>(M_PI / 8, 0.1));
         }
     }
     else if (steeringChoice == ARRIVE_AND_ALIGN) {
         for (auto entity : entities) {
-            entity->removeBreadcrumb();
             entity->clearSteeringBehaviors();
             entity->addSteeringBehavior(std::make_unique<Arrive>(15, 0.1, arriveDistance, slowDistance));
             entity->addSteeringBehavior(std::make_unique<Align>(M_PI / 6, 0.1, M_PI / 32, M_PI / 8));
@@ -207,7 +172,6 @@ void Game::setSteeringBehavior(STEERING_TYPE steeringChoice) {
     }
     else if (steeringChoice == ARRIVE_AND_ALIGN_2) {
         for (auto entity : entities) {
-            entity->removeBreadcrumb();
             entity->clearSteeringBehaviors();
             entity->addSteeringBehavior(std::make_unique<Arrive>(32, 0.1, arriveDistance, slowDistance * 2));
             entity->addSteeringBehavior(std::make_unique<Align>(M_PI / 3, 0.1, M_PI / 32, M_PI * .8));
@@ -215,14 +179,12 @@ void Game::setSteeringBehavior(STEERING_TYPE steeringChoice) {
     }
     else if (steeringChoice == WANDER) {
         for (auto entity : entities) {
-            entity->removeBreadcrumb();
             entity->clearSteeringBehaviors();
             entity->addSteeringBehavior(std::make_unique<Wander>(50, 15, 0.01, 0, 8, M_PI / 16, 0.1, M_PI / 32, M_PI / 4));
         }
     }
     else if (steeringChoice == WANDER_2) {
         for (auto entity : entities) {
-            entity->removeBreadcrumb();
             entity->clearSteeringBehaviors();
             entity->addSteeringBehavior(std::make_unique<Wander>(50, 40, 0.01, 0, 8, M_PI / 16, 0.1, M_PI / 32, M_PI / 4));
         }
@@ -247,7 +209,6 @@ void Game::setSteeringBehavior(STEERING_TYPE steeringChoice) {
         }
 
         for (auto entity : entities) {
-            entity->removeBreadcrumb();
             entity->clearSteeringBehaviors();
             entity->addSteeringBehavior(std::make_unique<Arrive>(8, 0.1, arriveDistance, slowDistance));
             entity->addSteeringBehavior(std::make_unique<Align>(M_PI / 3, 0.1, M_PI / 32, M_PI * .8));
@@ -257,7 +218,7 @@ void Game::setSteeringBehavior(STEERING_TYPE steeringChoice) {
 
 }
 
-
+/*
 void Game::sendVelocityMatch(float deltaTime) {
     
     if (velocityStruct.timeLeft > 0) {
@@ -276,23 +237,25 @@ void Game::sendVelocityMatch(float deltaTime) {
             velocityStruct.nextLoc = mousePosFloat;
         }
     }
-
 }
+*/
 
 
 Breadcrumb* Game::getNearestWaterBreadcrumb(sf::Vector2f currentPos) {
 
 
-    if (waterBreadcrumbs.size() <= 0) {
+    if (waters.size() <= 0) {
         return nullptr;
     }
 
-    Breadcrumb* closestBreadcrumb = waterBreadcrumbs.at(0);
-    float shortestDist = VectorUtils::vector2Length(currentPos - waterBreadcrumbs.at(0)->getPosition());
+    Breadcrumb* closestBreadcrumb = waters.at(0);
+    float shortestDist = VectorUtils::vector2Length(currentPos - waters.at(0)->getPosition());
 
-    for (auto breadcrumb : waterBreadcrumbs) {
-        if (VectorUtils::vector2Length(currentPos -breadcrumb->getPosition()) < shortestDist) {
+    for (auto breadcrumb : waters) {
+        float dist = VectorUtils::vector2Length(currentPos -breadcrumb->getPosition());
+        if (dist < shortestDist) {
             closestBreadcrumb = breadcrumb;
+            shortestDist = dist;
         }
     }
     return closestBreadcrumb;
