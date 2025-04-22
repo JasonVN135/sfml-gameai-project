@@ -84,6 +84,9 @@ public:
         FLOCKING
     };
 
+    /** is Header written yet for monster file */
+    bool isHeaderWritten;
+
 
     /** The Current Steering Behavior Type */
     STEERING_TYPE currentSteeringType;
@@ -129,7 +132,7 @@ public:
     /**
      * Spawn LearningMonster
      */
-    void spawnLearningMonster(float x, float y);
+    void spawnLearningMonster(float x, float y, std::string dataFile);
 
     /**
      * Check if the entity is out of bounds

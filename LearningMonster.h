@@ -54,7 +54,7 @@ public:
      * @param textureFile The texture the entity will store
      * @param startPos The initial position of the entity
      */
-    LearningMonster(const int id, const std::string& textureFile, const sf::Vector2f& startPos, const float vision);
+    LearningMonster(const int id, const std::string& textureFile, const sf::Vector2f& startPos, const float vision, const std::string dataPath);
 
     /**
      * The entity deconstructor
@@ -165,7 +165,7 @@ public:
 
     void initializeAttributeGetters();
 
-    void constructDecisionTree();
+    void constructDecisionTree(std::string dataPath);
 
 
 

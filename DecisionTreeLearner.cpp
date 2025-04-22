@@ -125,7 +125,7 @@ std::shared_ptr<DecisionTreeNode> DecisionTreeLearner::buildTree(const std::vect
     }
 
     // Recursively call based ont he action that generates the highest information gained
-    double bestGain = 1.0f;
+    double bestGain = -1.0f;
     std::string highestAttribute;
     for (const auto& attribute : attributes) {
         double gain = informationGain(entries, attribute);

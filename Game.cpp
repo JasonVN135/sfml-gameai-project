@@ -7,14 +7,20 @@ Game::Game() : window(sf::VideoMode(1000, 800), "SFML Window") {
     arriveDistance = 10.0;
     slowDistance = 50.0;
 
+    // Override Already existing Data
+    std::ofstream clearFile("DataFiles/monsterData.csv", std::ios::trunc);
+    isHeaderWritten = false;
+
     // Initialize the steering behavior
     spawnEntity(300, 300);
-    spawnMonster(800, 600);
     currentSteeringType = ARRIVE_AND_ALIGN;
 
     waters.push_back(new Breadcrumb(sf::Vector2f(180, 180), 10));
     waters.push_back(new Breadcrumb(sf::Vector2f(840, 450), 10));
     waters.push_back(new Breadcrumb(sf::Vector2f(270, 690), 10));
+    waters.push_back(new Breadcrumb(sf::Vector2f(560, 370), 10));
+    waters.push_back(new Breadcrumb(sf::Vector2f(720, 220), 10));
+    waters.push_back(new Breadcrumb(sf::Vector2f(360, 750), 10));
 
     for (auto water : waters) {
         water->setFillColor(sf::Color(68, 86, 240, 100));
@@ -94,7 +100,24 @@ void Game::processEvents() {
                 monsters.clear();
                 learningMonsters.clear();
                 spawnEntity(300, 300);
-                spawnMonster(900, 100);
+                spawnLearningMonster(900, 100, "DataFiles/monsterData.csv");
+            }
+            // Learning Monster Decision Tree Preset Data
+            else if (event.key.code == sf::Keyboard::Num3) {
+                for (size_t i = 0; i < entities.size(); ++i) {
+                    delete entities[i]; // Free memory
+                }
+                for (size_t i = 0; i < monsters.size(); ++i) {
+                    delete monsters[i]; // Free memory
+                }
+                for (size_t i = 0; i < learningMonsters.size(); ++i) {
+                    delete learningMonsters[i]; // Free memory
+                }
+                entities.clear();
+                monsters.clear();
+                learningMonsters.clear();
+                spawnEntity(300, 300);
+                spawnLearningMonster(900, 100, "DataFiles/setMonsterData.csv");
             }
         }
     }
@@ -192,9 +215,9 @@ void Game::spawnMonster(float x, float y) {
     monsters.push_back(newMonster);
 }
 
-void Game::spawnLearningMonster(float x, float y) {
+void Game::spawnLearningMonster(float x, float y, std::string dataFile) {
 
-    LearningMonster *newMonster = new LearningMonster(learningMonsterCount, "Assets/monster-sprite.png", sf::Vector2f(x, y), 200);
+    LearningMonster *newMonster = new LearningMonster(learningMonsterCount, "Assets/monster-sprite.png", sf::Vector2f(x, y), 200, dataFile);
     learningMonsterCount += 1;
     learningMonsters.push_back(newMonster);
 }

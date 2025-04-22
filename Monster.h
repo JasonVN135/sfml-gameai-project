@@ -48,8 +48,6 @@ private:
     std::string currentAction;
     /** The recent behavior status */
     BehaviorStatus behaviorStatus;
-    /** is Header written yet */
-    bool isHeaderWritten;
 
 
 public:

@@ -2,7 +2,7 @@
 #include "SteeringBehavior.h"
 
 Monster::Monster(const int id, const std::string& textureFile, const sf::Vector2f& startPos, const float vision) 
-: visionCircle(vision, (int) vision), visionDist(vision), isWandering(false), isChasing(false), isGettingWater(false), isHeaderWritten(false) {
+: visionCircle(vision, (int) vision), visionDist(vision), isWandering(false), isChasing(false), isGettingWater(false) {
 
     if (!texture.loadFromFile(textureFile)) {
         throw std::runtime_error("Failed to load text: " + textureFile);
@@ -326,7 +326,7 @@ BehaviorStatus Monster::chasePlayer() {
     }
 
     // Check if we can still see the target
-    if (!canSeeTarget()) {
+    if (target != nullptr && !canSeeTarget()) {
         target = nullptr;
         isChasing = false;
         return BehaviorStatus::Failure;
@@ -344,7 +344,7 @@ BehaviorStatus Monster::chasePlayer() {
         currentAction = "chasePlayer";
         return BehaviorStatus::Running;
     }
-    currentAction = "chasePlayer";
+    currentAction = "attackTarget";
     return BehaviorStatus::Success;
 }
 
@@ -357,13 +357,13 @@ BehaviorStatus Monster::attackTarget() {
 
     if (!isAtTarget()) {
         isChasing = false;
-        currentAction = "attackTarget";
         return BehaviorStatus::Failure;
     }
     // Reset their positions
     target->setPosition(sf::Vector2f(300, 300));
     setPosition(sf::Vector2f(800, 700));
     isChasing = false;
+    currentAction = "wander";
     return BehaviorStatus::Success;
 }
 
@@ -372,6 +372,7 @@ BehaviorStatus Monster::wander() {
         clearSteeringBehaviors();
         addSteeringBehavior(std::make_unique<Wander>(50, 15, 0.01, 0, 4, M_PI / 16, 0.1, M_PI / 32, M_PI / 4));
     }
+    currentAction = "wander";
 
     if (isThirsty()) {
         isWandering = false;
@@ -383,24 +384,34 @@ BehaviorStatus Monster::wander() {
         return BehaviorStatus::Failure;
     }
 
-    currentAction = "wander";
     return BehaviorStatus::Running;
 }
 
 void Monster::logState() {
     static std::ofstream logFile("DataFiles/monsterData.csv", std::ios::app);
 
-    if (!isHeaderWritten) {
-        logFile << "isThirsty,canSeeWater,canSeePlayer,isAtTarget,action,status\n";
-        isHeaderWritten = true;
+    if (!Game::getInstance().isHeaderWritten) {
+        logFile << "isThirsty,isGettingWater,canSeeWater,canSeePlayer,isAtTarget,action\n";
+        Game::getInstance().isHeaderWritten = true;
     }
 
     int thirsty = isThirsty() ? 1 : 0;
-    int seeWater = (VectorUtils::vector2Length(Game::getInstance().getNearestWaterBreadcrumb(kinematic.position)->getKinematic().position - kinematic.position) < 200) ? 1 : 0;
-    int seePlayer = canSeeTarget() ? 1 : 0;
-    int atTarget = isAtTarget() ? 1 : 0;
     int gettingWater = isGettingWater ? 1 : 0;
+    int seeWater = 0;
+    sf::Vector2f waterPos = Game::getInstance().getNearestWaterBreadcrumb(kinematic.position)->getKinematic().position;
+    if (VectorUtils::vector2Length(waterPos - kinematic.position) < visionDist) {
+        seeWater = 1;
+    }
+    int seePlayer = 0;
+    for (auto entity : Game::getInstance().getEntities()) {
+        // If a target was found
+        if (VectorUtils::vector2Length(entity->getKinematic().position - kinematic.position) < visionDist) {
+            seePlayer = 1;
+        }
+    }
+    int atTarget = isAtTarget() ? 1 : 0;
     
-    std::cout << "LogData: " << thirsty << "," << gettingWater << "," << seeWater << "," << seePlayer << "," << atTarget << "," << currentAction << "\n" << std::endl;
+    std::cout << "LogData: " << thirsty << "," << gettingWater << "," << seeWater << "," << seePlayer << "," << atTarget << "," << currentAction << std::endl;
     logFile << thirsty << "," << gettingWater << "," << seeWater << "," << seePlayer << "," << atTarget << "," << currentAction << "\n";
- }
+    logFile.flush();
+}

@@ -1,7 +1,7 @@
 #include "LearningMonster.h"
 #include "SteeringBehavior.h"
 
-LearningMonster::LearningMonster(const int id, const std::string& textureFile, const sf::Vector2f& startPos, const float vision) 
+LearningMonster::LearningMonster(const int id, const std::string& textureFile, const sf::Vector2f& startPos, const float vision, const std::string dataPath) 
 : visionCircle(vision, (int) vision), visionDist(vision) {
 
 
@@ -32,7 +32,7 @@ LearningMonster::LearningMonster(const int id, const std::string& textureFile, c
     thirst = 60.0;
     
     initializeAttributeGetters();
-    constructDecisionTree();
+    constructDecisionTree(dataPath);
 
 
 
@@ -103,6 +103,10 @@ void LearningMonster::update(float deltaTime) {
     setPosition(kinematic.position);
     setOrientation(kinematic.orientation);
     setKinematic(kinematic);
+
+    visionCircle.setPosition(kinematic.position);
+
+    std::cout << currentAction << std::endl;
 
     thirst -= deltaTime;
 }
@@ -201,28 +205,37 @@ void LearningMonster::drinkWater() {
 }
 
 bool LearningMonster::canSeeWater() {
+    std::cout << "Check See Water";
     // Get closest water
     Breadcrumb* water = Game::getInstance().getNearestWaterBreadcrumb(kinematic.position);
     if (VectorUtils::vector2Length(water->getKinematic().position - kinematic.position) < visionDist) {
         targetPos = water->getKinematic().position;
+        std::cout << " True" << std::endl;
         return true;
     }
+    std::cout << " False" << std::endl;
     return false;
 }
 bool LearningMonster::isThirsty() {
+    std::cout << "Check Is Thirsty";
     if (thirst < 40) {
+        std::cout << " True" << std::endl;
         return true;
     }
+    std::cout << " False" << std::endl;
     return false;
 }
 bool LearningMonster::canSeePlayer() {
+    std::cout << "Check See Player";
     // If the Monster already had a target
     if (target != nullptr) {
         if (VectorUtils::vector2Length(targetPos - kinematic.position) < visionDist) {
+            std::cout << " True" << std::endl;
             return true;
         }
         else {
             target = nullptr;
+            std::cout << " False" << std::endl;
             return false;
         }
     }
@@ -233,21 +246,29 @@ bool LearningMonster::canSeePlayer() {
         // If a target was found
         if (VectorUtils::vector2Length(entity->getKinematic().position - kinematic.position) < visionDist) {
             target = entity;
+            std::cout << " True" << std::endl;
             return true;
         }
     }
+    std::cout << " False" << std::endl;
     return false;
 }
 bool LearningMonster::isAtTarget() {
+    std::cout << "Check At Target";
     if (VectorUtils::vector2Length(targetPos - kinematic.position) < 15) {
+        std::cout << " True" << std::endl;
         return true;
     }
+    std::cout << " False" << std::endl;
     return false;
 }
 bool LearningMonster::isGettingWater() {
+    std::cout << "Check Is Drinking";
     if (currentAction == "drinkWater") {
+        std::cout << " True" << std::endl;
         return true;
     }
+    std::cout << " False" << std::endl;
     return false;
 }
 
@@ -264,10 +285,10 @@ void LearningMonster::initializeAttributeGetters() {
     attributeGetterMap["isGettingWater"] = [this]() { return isGettingWater(); };
 }
 
-void LearningMonster::constructDecisionTree() {
+void LearningMonster::constructDecisionTree(std::string dataPath) {
 
     // Read the csv file
-    std::ifstream file("DataFiles/monsterData.csv");
+    std::ifstream file(dataPath);
     if (!file.is_open()) {
         std::cerr << "Failed to open CSV file." << std::endl;
         return;
@@ -305,9 +326,10 @@ void LearningMonster::constructDecisionTree() {
         Entry entry;
         int colIndex = 0;
 
+        
+
         while (std::getline(ss, cell, ',')) {
             const std::string& columnName = headers[colIndex];
-
             if (columnName == actionColumn) {
                 entry.action = cell;
             } else {

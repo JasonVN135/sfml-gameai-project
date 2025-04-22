@@ -14,7 +14,7 @@ of the project structure can be found below.
 
 ## Setup
 
-1. Open a terminal
+1. Open a terminal that runs Ubuntu 20.04
 2. Run the following command lines to ensure proper installation of required software
     - sudo apt update && sudo apt -y upgrade
     - sudo apt -y install build-essential libsfml-dev
@@ -22,12 +22,17 @@ of the project structure can be found below.
 
 ## Compilation
 
-1. Remove any compiled objects and the executable.
-2. Open a desktop terminal
-3. Navigate to the directory that contains the project
+1. Open a desktop terminal
+2. Navigate to the directory that contains the project
+3. Remove any compiled objects and the executable.
+    - make clean
 4. Execute the following command lines in the terminal
     - make
     - ./main
+
+## Notes on running
+- Option Num2 can technially be run before Num1, though the AI won't do anything with proper information
+- Num2 can be run after Num1, but performance is dictate by how long the Num1's Monster has been running for and the variety of information it has gained.
 
 ---
 
@@ -37,34 +42,32 @@ of the project structure can be found below.
 
 - main.cpp: The entry point of the program. Its sole purpose is to call the main loop in Game.cpp and exit when requested.
 - Game.cpp: Handles the main game loop and manages the spawning of Entites and creation of the Graph. Handles inputs from the users to determine which graph to display and which search algorithm to use.
-- Entity.cpp: A general-purpose entity class for implementation. Contains:
-    - sf::Sprite and sf::Texture for visual representation
-    - Key values for movement
-    - breadcrumbs: A list of breadcrumbs that the entity may intend to path to
-    - steeringBehaviors: A list of different steering behaviors to calculate for correct movement
-- Breadcrumb.cpp: Represents navigation points used by Entity for pathfind. Contains positional data and an acceptance threshold.
-- SteeringBehavior.cpp: A virtual class. Additional classes can derive from it to create various different steering behaviors
-    - PositionMatch - Parent: SteeringBehavior
-    - Arrive - Parent: PositionMatching
-    - OrientationMatching - Parent: SteeringBehavior
-    - Align - Parent: OrientationMatching
-    - Wander - Parent: Align
-    - VelocityMatching - Parent: SteeringBehavior
-    - RotationMatching - Parent: SteeringBehavior
-    - Flocking - Parent: SteeringBehavior
-- VectorUtils.cpp: A static class to hold various algebra calculatation to be used by any class
-- Graph.cpp: A structure that contains information used to form a graph, including vertices and edges.
+
+- AIs:
+    - Entity.cpp: The entity class that acts as the base user of DecisionTree
+    - Monster:cpp: The class that utilizes the BecisionTree. Fills out logs of its state to a csv file for the 
+    - LearningMonster.cpp: The class that reads the logs recorded by Monster.cpp, constructs a DecisionTree based on it, and acts on the DecisionTree it constructed
+- Structures
+    - DecisionTree.cpp: Holds node functionality for creating a decisionTree
+        - Action: The Action Node that the Entity will perform
+        - Decision: An Abstract class to handle which direction to navigate down a tree
+        - BoolDecison: A Decision that decides when its condition returns true or false
+        - FloatDecision: A Decision that decides based on the condition value falling between two predefined values.
+    - BehaviorTree.cpp: Holds node functionality for creating a behaviorTree
+        - BehaviorStatus struct: The Status of a Behavior Node's tick
+        - ActionNode: The Action the Entity will perform
+        - CompositeNode: AN Abstract class to hold the various compsite nodes base functionality
+        - SequenceNode: Perform its children nodes in order.
+        - SelectorNode: Returns the status of the first successful or running node, stops looking at further nodes if successful or running.
+        - ParallelNode: Runs its children at the same time, storing failure and success conditions.
+
 
 ### Header Files
 - Each .cpp file (except main.cpp) has a corresponding .h file that defines its classes and functions
 - SteeringOutput, Kinematic, and VelocityMatchStruct are structs used to hold specific data.
 
 ### Inputs
-- Num0: Create the default USA border map
-- Num1: Create a randomly generated graph with 500 vertices
-- NUm2: Create a randomly generated graph with 5000 vertices
-- Num3: Have the Entity use Dijkstra's Algorithm
-- Num4: Have the Entity use Astar Algorithm with the Manhattan Heuristic
-- Num5: Have the Entity use Astar Algorithm with the Euclidian Heuristic
-- Num6: Have the Entity use Astar Algorithm with the Squared Euclidian Heuristic
-- Num7: Create a room based graph
+- Num0: Create a single Entity with a set DecisionTree
+- Num1: Create a single Entity with a set DecisionTree, and a Monster with a set BehaviorTree
+- Num2: Create a single Entity with a set DecisionTree, and a LearningMonster with a logs from the Monster from Num1
+- Num3: Create a single Entity with a set DecisionTree, and a LearningMonster with set logs from a previous Monster
