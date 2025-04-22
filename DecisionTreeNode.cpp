@@ -6,7 +6,6 @@
 Action::Action(const std::string& name) : actionName(name) {}
 
 std::shared_ptr<DecisionTreeNode> Action::makeDecision() {
-    std::cout << "Action: " << actionName << std::endl;
     return shared_from_this();
 }
 

@@ -14,8 +14,12 @@ TARGET = main
 SRCS = main.cpp \
 	    Game.cpp \
 		Entity.cpp \
+		Monster.cpp \
+		LearningMonster.cpp \
 		SteeringBehavior.cpp \
 		DecisionTreeNode.cpp \
+		BehaviorTreeNode.cpp \
+		DecisionTreeLearner.cpp \
 		Breadcrumb.cpp \
 		VectorUtils.cpp
 

@@ -8,6 +8,8 @@
 #include <sstream>
 #include "Breadcrumb.h"
 #include "Entity.h"
+#include "Monster.h"
+#include "LearningMonster.h"
 #include "SteeringBehavior.h"
 #include "VelocityMatchStruct.h"
 
@@ -21,10 +23,18 @@ private:
     sf::Clock clock;
     /** Vector of entities */
     std::vector<Entity*> entities;
+    /** Vector of monsters */
+    std::vector<Monster*> monsters;
+    /** Vector of learning monsters */
+    std::vector<LearningMonster*> learningMonsters;
     /** Vector of breadcrumbs */
     std::vector<Breadcrumb*> waters;
     /** Number of entities that have spawned */
     int entityCount;
+    /** Number of monsters that have spawned */
+    int monsterCount;
+    /** Number of learning monsters */
+    int learningMonsterCount;
     /** The set arrive distance for all navNodes */
     float arriveDistance;
     /** The set slow distance for all navNodes */
@@ -97,26 +107,39 @@ public:
     std::vector<Entity*> getEntities();
 
     /**
-     * Method to spawn an AI Object. Attach 4 Markers for the AI to path towards.
+     * Get the list of all monsters
+     */
+    std::vector<Monster*> getMonsters();
+
+    /**
+     * Get the list off all learning monsters
+     */
+    std::vector<LearningMonster*> getLearningMonsters();
+
+    /**
+     * Method to spawn an AI Object.
      */
     void spawnEntity(float x, float y);
+
+    /**
+     * Method to spawn a Monster.
+     */
+    void spawnMonster(float x, float y);
+
+    /**
+     * Spawn LearningMonster
+     */
+    void spawnLearningMonster(float x, float y);
 
     /**
      * Check if the entity is out of bounds
      */
     void checkOutOfBounds();
 
-
     /**
      * Set the steering behavior based on user choice
      */
     void setSteeringBehavior(STEERING_TYPE steeringChoice);
-
-
-    /**
-     * Set the velocity match for entities if using velocity match
-     */
-    //void sendVelocityMatch(float deltaTime);
 
     /**
      * Get the closest water Breadcrumb Node

@@ -9,6 +9,7 @@ Game::Game() : window(sf::VideoMode(1000, 800), "SFML Window") {
 
     // Initialize the steering behavior
     spawnEntity(300, 300);
+    spawnMonster(800, 600);
     currentSteeringType = ARRIVE_AND_ALIGN;
 
     waters.push_back(new Breadcrumb(sf::Vector2f(180, 180), 10));
@@ -43,16 +44,57 @@ void Game::processEvents() {
         if (event.type == sf::Event::Closed)
             window.close();
 
-        if (event.type == sf::Event::MouseButtonPressed) {
-            if (event.mouseButton.button == sf::Mouse::Left) {
-            
-            }
-        }
         
         if (event.type == sf::Event::KeyPressed) {
-            // Preset Graph
+            // Entity Decision Tree
             if (event.key.code == sf::Keyboard::Num0) {
-                
+                for (size_t i = 0; i < entities.size(); ++i) {
+                    delete entities[i]; // Free memory
+                }
+                for (size_t i = 0; i < monsters.size(); ++i) {
+                    delete monsters[i]; // Free memory
+                }
+                for (size_t i = 0; i < learningMonsters.size(); ++i) {
+                    delete learningMonsters[i]; // Free memory
+                }
+                entities.clear();
+                monsters.clear();
+                learningMonsters.clear();
+                spawnEntity(300, 300);
+            }
+            // Monster Behavior Tree
+            else if (event.key.code == sf::Keyboard::Num1) {
+                for (size_t i = 0; i < entities.size(); ++i) {
+                    delete entities[i]; // Free memory
+                }
+                for (size_t i = 0; i < monsters.size(); ++i) {
+                    delete monsters[i]; // Free memory
+                }
+                for (size_t i = 0; i < learningMonsters.size(); ++i) {
+                    delete learningMonsters[i]; // Free memory
+                }
+                entities.clear();
+                monsters.clear();
+                learningMonsters.clear();
+                spawnEntity(300, 300);
+                spawnMonster(800, 600);
+            }
+            // Learning Monster Decision Tree
+            else if (event.key.code == sf::Keyboard::Num2) {
+                for (size_t i = 0; i < entities.size(); ++i) {
+                    delete entities[i]; // Free memory
+                }
+                for (size_t i = 0; i < monsters.size(); ++i) {
+                    delete monsters[i]; // Free memory
+                }
+                for (size_t i = 0; i < learningMonsters.size(); ++i) {
+                    delete learningMonsters[i]; // Free memory
+                }
+                entities.clear();
+                monsters.clear();
+                learningMonsters.clear();
+                spawnEntity(300, 300);
+                spawnMonster(900, 100);
             }
         }
     }
@@ -61,9 +103,7 @@ void Game::processEvents() {
 
 void Game::update(float deltaTime) {
 
-    if (currentSteeringType == VELOCITY) {
-        //sendVelocityMatch(deltaTime);
-    }
+    checkOutOfBounds();
 
     if (entities.size() == 0) {
         spawnEntity(0, 0);
@@ -72,6 +112,16 @@ void Game::update(float deltaTime) {
     for (unsigned int i = 0; i < entities.size(); i++) {
         Entity* entity = entities.at(i);
         entity->update(deltaTime);
+    }
+
+    for (unsigned int i = 0; i < monsters.size(); i++) {
+        Monster* monster = monsters.at(i);
+        monster->update(deltaTime);
+    }
+
+    for (unsigned int i = 0; i < learningMonsters.size(); i++) {
+        LearningMonster* learningMonster = learningMonsters.at(i);
+        learningMonster->update(deltaTime);
     }
 }
 
@@ -90,6 +140,13 @@ void Game::render() {
         entity->render(window);
     }
 
+    for (auto monster : monsters) {
+        monster->render(window);
+    }
+
+    for (auto learningMonster : learningMonsters) {
+        learningMonster->render(window);
+    }
     // end the current frame
     window.display();
 }
@@ -112,6 +169,14 @@ std::vector<Entity*> Game::getEntities() {
     return entities;
 }
 
+std::vector<Monster*> Game::getMonsters() {
+    return monsters;
+}
+
+std::vector<LearningMonster*> Game::getLearningMonsters() {
+    return learningMonsters;
+}
+
 void Game::spawnEntity(float x, float y) {
 
     // Load in the enemy
@@ -120,12 +185,26 @@ void Game::spawnEntity(float x, float y) {
     entities.push_back(newEntity);
 }
 
+void Game::spawnMonster(float x, float y) {
+
+    Monster *newMonster = new Monster(monsterCount, "Assets/monster-sprite.png", sf::Vector2f(x, y), 200);
+    monsterCount += 1;
+    monsters.push_back(newMonster);
+}
+
+void Game::spawnLearningMonster(float x, float y) {
+
+    LearningMonster *newMonster = new LearningMonster(learningMonsterCount, "Assets/monster-sprite.png", sf::Vector2f(x, y), 200);
+    learningMonsterCount += 1;
+    learningMonsters.push_back(newMonster);
+}
+
 void Game::checkOutOfBounds() {
 
     for (auto entity : entities) {
         sf::Vector2f entityPos = entity->getKinematic().position;
         if (entity->getKinematic().position.x < -5) {
-            entity->setPosition(sf::Vector2f(800, entityPos.y));
+            entity->setPosition(sf::Vector2f(1000, entityPos.y));
         }
         else if (entity->getKinematic().position.x > 1005) {
             entity->setPosition(sf::Vector2f(0, entityPos.y));
@@ -135,6 +214,36 @@ void Game::checkOutOfBounds() {
         }
         else if (entity->getKinematic().position.y > 805) {
             entity->setPosition(sf::Vector2f(entityPos.x, 0));
+        }
+    }
+    for (auto monster : monsters) {
+        sf::Vector2f monsterPos = monster->getKinematic().position;
+        if (monster->getKinematic().position.x < -5) {
+            monster->setPosition(sf::Vector2f(800, monsterPos.y));
+        }
+        else if (monster->getKinematic().position.x > 1005) {
+            monster->setPosition(sf::Vector2f(0, monsterPos.y));
+        }
+        if (monster->getKinematic().position.y < -5) {
+            monster->setPosition(sf::Vector2f(monsterPos.x, 800));
+        }
+        else if (monster->getKinematic().position.y > 805) {
+            monster->setPosition(sf::Vector2f(monsterPos.x, 0));
+        }
+    }
+    for (auto monster : learningMonsters) {
+        sf::Vector2f monsterPos = monster->getKinematic().position;
+        if (monster->getKinematic().position.x < -5) {
+            monster->setPosition(sf::Vector2f(800, monsterPos.y));
+        }
+        else if (monster->getKinematic().position.x > 1005) {
+            monster->setPosition(sf::Vector2f(0, monsterPos.y));
+        }
+        if (monster->getKinematic().position.y < -5) {
+            monster->setPosition(sf::Vector2f(monsterPos.x, 800));
+        }
+        else if (monster->getKinematic().position.y > 805) {
+            monster->setPosition(sf::Vector2f(monsterPos.x, 0));
         }
     }
 }
@@ -218,31 +327,7 @@ void Game::setSteeringBehavior(STEERING_TYPE steeringChoice) {
 
 }
 
-/*
-void Game::sendVelocityMatch(float deltaTime) {
-    
-    if (velocityStruct.timeLeft > 0) {
-        velocityStruct.timeLeft -= deltaTime;
-    }
-    else {
-        velocityStruct.timeLeft = 1;
-        for (auto entity : entities) {
-            Kinematic kin;
-            kin.velocity = velocityStruct.nextLoc - velocityStruct.prevLoc;
-            kin.rotation = M_PI;
-            entity->setTargetKinematic(kin);
-            velocityStruct.prevLoc = velocityStruct.nextLoc;
-            sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-            sf::Vector2f mousePosFloat = sf::Vector2f((float) mousePos.x, (float) mousePos.y);
-            velocityStruct.nextLoc = mousePosFloat;
-        }
-    }
-}
-*/
-
-
 Breadcrumb* Game::getNearestWaterBreadcrumb(sf::Vector2f currentPos) {
-
 
     if (waters.size() <= 0) {
         return nullptr;
